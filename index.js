@@ -20,6 +20,11 @@ app.use(cors())
 
 
 
+
+
+
+
+
 const uri =`mongodb+srv://${process.env.DB_USER}:${process.env.DB_PASS}@cluster0.d0x6rpk.mongodb.net/?retryWrites=true&w=majority`;
 
 // Create a MongoClient with a MongoClientOptions object to set the Stable API version
@@ -40,6 +45,7 @@ async function run() {
 
 
         // verify token middleware
+
         const verifyToken=(req,res,next)=>{
             
             if(!req.headers.authorization){
@@ -57,17 +63,22 @@ async function run() {
         }
 
 
-// use verifyAdmin after verifyToken
-        const verifyAdmin=async(req,res,next)=>{
-            const email=req.decoded.email;
-            const query={email:email};
-            const user=await usersCollection.find().toArray();
-            const isAdmin=user?.role==='admin'
-            if(!isAdmin){
-                return res.status(403).send({message:'forbidden access'})
-            }
-            next();
+        // user admin verify
+
+    const verifyAdmin=async(req,res,next)=>{
+        const email=req.decoded.email;
+        const query={email:email}
+        const user=await usersCollection.findOne(query)
+        const isAdmin=user?.role==='admin';
+        if(!isAdmin){
+          return res.status(403).send({message:'forbidden access'})
         }
+        next();
+      }
+        
+
+
+
 
         // users related api
 
@@ -106,7 +117,7 @@ async function run() {
 
         })
 
-        app.get('/users',verifyToken ,async(req,res)=>{
+        app.get('/users',verifyToken,verifyAdmin ,async(req,res)=>{
             
             const result=await usersCollection.find().toArray()
             res.send(result)
