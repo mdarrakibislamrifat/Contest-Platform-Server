@@ -128,6 +128,22 @@ async function run() {
 
         })
 
+
+        app.get('/user/creator/:email',verifyToken,async(req,res)=>{
+            const email=req.params.email;
+            if(email !== req.decoded.email){
+                return res.status(403).send({message:'forbidden access'})
+            }
+            const query={email:email}
+            const user=await usersCollection.findOne(query);
+            let creator=false;
+            if(user){
+                creator=user?.role=== 'creator'
+            }
+            res.send({creator})
+
+        })
+
         app.get('/users',verifyToken,verifyAdmin ,async(req,res)=>{
             
             const result=await usersCollection.find().toArray()
