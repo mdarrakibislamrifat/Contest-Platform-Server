@@ -75,6 +75,17 @@ async function run() {
         }
         next();
       }
+
+    const verifyCreator=async(req,res,next)=>{
+        const email=req.decoded.email;
+        const query={email:email}
+        const user=await usersCollection.findOne(query)
+        const isCreator=user?.role==='creator';
+        if(!isCreator){
+          return res.status(403).send({message:'forbidden access'})
+        }
+        next();
+      }
         
 
 
@@ -143,6 +154,19 @@ async function run() {
             res.send(result)
         })
 
+        // creator related api
+        app.patch('/users/creator/:id',verifyToken,verifyAdmin,async(req,res)=>{
+            const id=req.params.id;
+            const filter={_id:new ObjectId(id)}
+            const updatedDoc={
+                $set:{
+                    role:'creator'
+                }
+            }
+            const result=await usersCollection.updateOne(filter,updatedDoc)
+            res.send(result)
+        })
+
         
 
         // jwt related api
@@ -171,6 +195,8 @@ app.get('/', (req, res) => {
     res.send('Hello World!')
 })
 
+
 app.listen(port, () => {
     console.log(`Example app listening on port ${port}`)
 })
+
