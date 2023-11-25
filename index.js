@@ -41,7 +41,8 @@ async function run() {
         // Connect the client to the server	(optional starting in v4.7)
         // await client.connect();
         const database = client.db('contestPlatform')
-        const usersCollection = database.collection('users')
+        const usersCollection = database.collection('users');
+        const contestsCollection = database.collection('contests');
 
 
         // verify token middleware
@@ -87,7 +88,33 @@ async function run() {
         next();
       }
         
+    //   contest related api
+    app.post('/contests',verifyToken,verifyCreator,async(req,res)=>{
+        const contest=req.body;
+        const result=await contestsCollection.insertOne(contest);
+        res.send(result)
+    })
 
+    app.get('/contests',async(req,res)=>{
+      
+        const result=await contestsCollection.find().toArray();
+        res.send(result)
+    })
+
+    app.get('/contests/:email',async(req,res)=>{
+        const email=req.params.email;
+        const query={email:email}
+        const result=await contestsCollection.find(query).toArray();
+        res.send(result)
+    })
+
+    app.delete('/contests/:id/:email',async(req,res)=>{
+        const id=req.params.id;
+        const email=req.params.email;
+        const query={id,email}
+        const result=await contestsCollection.deleteOne(query)
+        res.send(result)
+      })
 
 
 
@@ -105,7 +132,6 @@ async function run() {
             
             const result = await usersCollection.insertOne(user)
                 res.send(result)
-
 
         })
 
@@ -177,6 +203,18 @@ async function run() {
             const updatedDoc={
                 $set:{
                     role:'creator'
+                }
+            }
+            const result=await usersCollection.updateOne(filter,updatedDoc)
+            res.send(result)
+        })
+
+        app.patch('/users/client/:id',verifyToken,verifyAdmin,async(req,res)=>{
+            const id=req.params.id;
+            const filter={_id:new ObjectId(id)}
+            const updatedDoc={
+                $set:{
+                    role:'client'
                 }
             }
             const result=await usersCollection.updateOne(filter,updatedDoc)
