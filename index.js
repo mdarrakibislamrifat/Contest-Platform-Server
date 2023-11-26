@@ -247,6 +247,19 @@ async function run() {
             res.send(result)
         })
 
+        // pending or confirmed
+        app.patch('/contests/admin/:id',verifyToken,verifyAdmin,async(req,res)=>{
+            const id=req.params.id;
+            const filter={_id:new ObjectId(id)}
+            const updatedDoc={
+                $set:{
+                    status:'confirmed'
+                }
+            }
+            const result=await contestsCollection.updateOne(filter,updatedDoc)
+            res.send(result)
+        })
+
         
 
         // jwt related api
