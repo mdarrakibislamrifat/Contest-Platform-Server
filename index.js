@@ -2,7 +2,9 @@ const express = require('express');
 require("dotenv").config();
 const { MongoClient, ServerApiVersion, ObjectId } = require('mongodb');
 const cors = require('cors');
-const jwt=require('jsonwebtoken')
+const jwt=require('jsonwebtoken');
+const stripe=require('stripe')(process.env.STRIPE_SECRET_KEY);
+
 const app = express();
 
 // const cookieParser=require('cookie-parser')
@@ -43,6 +45,7 @@ async function run() {
         const database = client.db('contestPlatform')
         const usersCollection = database.collection('users');
         const contestsCollection = database.collection('contests');
+        const registerUsersCollection = database.collection('registerUser');
 
 
         // verify token middleware
@@ -91,7 +94,31 @@ async function run() {
     //   contest related api
     app.post('/contests',verifyToken,verifyCreator,async(req,res)=>{
         const contest=req.body;
+        contest.count=0;
         const result=await contestsCollection.insertOne(contest);
+        res.send(result)
+    })
+
+    
+
+    app.get('/contests/payments/new/item/:id',async(req,res)=>{
+        const id=req.params.id;
+       const query={_id:new ObjectId(id)}
+        const result=await contestsCollection.find(query).toArray()
+        res.send(result)
+      })
+
+    app.post('/registration', async (req, res) => {
+        const registerUser = req.body;
+
+        const productDetails = await registerUsersCollection.findOne({ id: registerUser.id, email: registerUser.email })
+        if (productDetails) {
+            return res.send({ msg: 'Already Added' })
+        }
+
+        const updateItem=await contestsCollection.updateOne({_id:new ObjectId(registerUser.id)},{$inc:{count:1}})
+        const result = await registerUsersCollection.insertOne(registerUser)
+
         res.send(result)
     })
 
@@ -100,6 +127,7 @@ async function run() {
         const result=await contestsCollection.find().toArray();
         res.send(result)
     })
+
 
     app.get('/contests/:email',async(req,res)=>{
         const email=req.params.email;
@@ -114,6 +142,7 @@ async function run() {
         const result=await contestsCollection.findOne(query)
         res.send(result)
       })
+      
 
       app.patch('/contests/new/:id',async(req,res)=>{
         const item=req.body;
@@ -270,6 +299,30 @@ async function run() {
             })
             res.send({token})
         })
+
+        // payment intent
+        app.post('/create-payment-intent', async (req, res) => {
+            try {
+              const { price } = req.body;
+              
+              const numericPrice = parseFloat(price);
+              const amount = Math.round(numericPrice * 100);
+              const paymentIntent = await stripe.paymentIntents.create({
+                currency: 'usd',
+                amount: amount,
+                payment_method_types: ['card']
+              });
+             
+              res.send({
+                clientSecret: paymentIntent.client_secret
+              });
+            } catch (error) {
+              console.error('Error creating payment intent:', error);
+              res.status(500).send({ error: 'Failed to create payment intent' });
+            }
+          });
+          
+          
         
         
         // Send a ping to confirm a successful connection
