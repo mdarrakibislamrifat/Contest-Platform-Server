@@ -101,6 +101,8 @@ async function run() {
 
     
 
+    
+
     app.get('/contests/payments/new/item/:id',async(req,res)=>{
         const id=req.params.id;
        const query={_id:new ObjectId(id)}
@@ -110,17 +112,46 @@ async function run() {
 
     app.post('/registration', async (req, res) => {
         const registerUser = req.body;
-
-        const productDetails = await registerUsersCollection.findOne({ id: registerUser.id, email: registerUser.email })
-        if (productDetails) {
-            return res.send({ msg: 'Already Added' })
-        }
-
-        const updateItem=await contestsCollection.updateOne({_id:new ObjectId(registerUser.id)},{$inc:{count:1}})
+        const updateItem=await contestsCollection.updateOne({_id: registerUser.id},{$inc:{count:1}})
         const result = await registerUsersCollection.insertOne(registerUser)
-
         res.send(result)
     })
+
+    app.get('/registration',async(req,res)=>{
+        
+        const result=await registerUsersCollection.find().toArray();
+        res.send(result);
+    })
+
+    app.get('/registration/v1/v2/:creatorEmail',async(req,res)=>{
+        const creatorEmail=req.params.creatorEmail;
+        const result=await registerUsersCollection.find({creatorEmail: creatorEmail}).toArray();
+        res.send(result);
+    })
+
+
+    
+
+    app.patch('/registration/v1/v2/:id',async(req,res)=>{
+        const id=req.params.id;
+        const filter={_id:new ObjectId(id)}
+        const updatedDoc={
+            $set:{
+                winner:'winner'
+            }
+        }
+        const result=await registerUsersCollection.updateOne(filter,updatedDoc)
+        res.send(result)
+    })
+
+
+    
+    
+
+    
+
+
+    
 
     app.get('/contests',async(req,res)=>{
       
