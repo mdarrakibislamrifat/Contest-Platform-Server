@@ -15,7 +15,6 @@ const app = express();
 const port = process.env.PORT || 5000;
 
 app.use(express.json())
-// app.use(cookieParser())
 app.use(cors())
 
 //  {
@@ -160,6 +159,18 @@ async function run() {
         const items=await contestsCollection.find().sort({count:-1}).limit(6).toArray()
         res.send(items)
     })
+
+    app.get('/find-by-type/:type', async (req, res) => {
+        const type = req.params.type;
+          const contests = await contestsCollection.find({ type }).toArray();
+          res.send(contests);
+        
+      });
+    app.get('/find-by-type', async (req, res) => {
+          const contests = await contestsCollection.find().toArray();
+          res.send(contests);
+        
+      });
 
     
     
