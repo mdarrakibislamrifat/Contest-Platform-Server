@@ -112,7 +112,8 @@ async function run() {
 
     app.post('/registration', async (req, res) => {
         const registerUser = req.body;
-        const updateItem=await contestsCollection.updateOne({_id: registerUser.id},{$inc:{count:1}})
+        
+        const updateItem=await contestsCollection.updateOne({_id: new ObjectId(registerUser.id)},{$inc:{count:1}})
         const result = await registerUsersCollection.insertOne(registerUser)
         res.send(result)
     })
