@@ -1,13 +1,17 @@
 const express = require('express');
 require("dotenv").config();
 const { MongoClient, ServerApiVersion, ObjectId } = require('mongodb');
+const corsConfig = {
+    origin: '*',
+    credentials: true,
+    methods: ['GET', 'POST', 'PUT','PATCH', 'DELETE']
+    }
 const cors = require('cors');
 const jwt=require('jsonwebtoken');
 const stripe=require('stripe')(process.env.STRIPE_SECRET_KEY);
 
 const app = express();
 
-// const cookieParser=require('cookie-parser')
 const port = process.env.PORT || 5000;
 
 app.use(express.json())
@@ -151,6 +155,11 @@ async function run() {
         res.send(result)
     })
 
+    // top registration
+    app.get('/items/topItems',async(req,res)=>{
+        const items=await contestsCollection.find().sort({count:-1}).limit(6).toArray()
+        res.send(items)
+    })
 
     
     
