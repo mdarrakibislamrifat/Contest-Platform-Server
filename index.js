@@ -15,12 +15,12 @@ const app = express();
 const port = process.env.PORT || 5000;
 
 app.use(express.json())
-app.use(cors())
+app.use(cors( {
+    origin:['http://localhost:5173','https://classy-pancake.surge.sh'],
+    credentials:true
+}))
 
-//  {
-//     origin:['http://localhost:5173','https://abashed-hydrant.surge.sh'],
-//     credentials:true
-// }
+
 
 
 
@@ -40,6 +40,8 @@ const client = new MongoClient(uri, {
         deprecationErrors: true,
     }
 });
+
+
 
 async function run() {
     try {
